@@ -1,22 +1,15 @@
-from torch import nn, optim
-import torch
-import torchgen
-
 import model
 import random
 import data
 
 import time
-import operator
-
-from data import what_figure
 
 random.seed(0)
 
 
 learn_rate = 0.0001
 
-num_of_epoch = 1000
+num_of_epoch = 100
 
 dataset = data.generate_dataset(3)
 
@@ -25,10 +18,7 @@ random.shuffle(dataset)
 train_data = dataset[:int(len(dataset) * 0.80)]
 test_data = dataset[int(len(dataset) * 0.80):]
 
-train_model = model.Model1(1, [30])
-
-loss_func = nn.CrossEntropyLoss()
-optimizer = optim.Adam(train_model.parameters(), lr=learn_rate)
+train_model = model.Model(1, [30], learn_rate)
 
 file = open("variant1/model1.txt", "w")
 
@@ -39,24 +29,21 @@ for epoch in range(num_of_epoch):
     times = 0
     for inp, outp in train_data:
 
-        optimizer.zero_grad()
-
         inp_flat = []
 
         for i in inp:
             inp_flat += i
 
         start_time = time.time()
-        result = train_model.forward(torch.FloatTensor(inp_flat))
+        result = train_model.forward(inp_flat)
         times += time.time() - start_time
 
-        loss = loss_func(result, torch.FloatTensor(outp))
+        loss = model.find_loss(result, outp)
 
-        loss.backward()
-        optimizer.step()
+        train_model.backward(outp, loss)
 
         acc += data.what_figure(result) == data.what_figure(outp)
-        summ += loss.item()
+        summ += loss
         num += 1
 
     summ_test = 0
@@ -64,29 +51,21 @@ for epoch in range(num_of_epoch):
     time_test = 0
     acc_test = 0
 
-    with torch.no_grad():
-        train_model.eval()
-        for inp, outp in test_data:
+    for inp, outp in test_data:
+        inp_flat = []
 
-            optimizer.zero_grad()
+        for i in inp:
+            inp_flat += i
 
-            inp_flat = []
+        start_time = time.time()
+        result = train_model.forward(inp_flat)
+        time_test += time.time() - start_time
 
-            for i in inp:
-                inp_flat += i
+        loss = model.find_loss(result, outp)
 
-            start_time = time.time()
-            result = train_model.forward(torch.FloatTensor(inp_flat))
-            time_test += time.time() - start_time
-            #print(result, torch.LongTensor(outp))
-
-            loss = loss_func(result, torch.FloatTensor(outp))
-
-            acc_test += data.what_figure(result) == data.what_figure(outp)
-            summ_test += loss.item()
-            num_test += 1
-
-    train_model.train()
+        acc_test += data.what_figure(result) == data.what_figure(outp)
+        summ_test += loss
+        num_test += 1
 
     print(epoch, summ / num, times / num, acc / num, summ_test / num_test, time_test / num_test, acc_test / num)
     file.write(str(epoch))
@@ -105,12 +84,9 @@ for epoch in range(num_of_epoch):
     file.write("\n")
 
 file.close()
-torch.save(train_model.state_dict(), f"save1.mod")
+#torch.save(train_model.state_dict(), f"save1.mod")
 
-train_model = model.Model1(2, [30, 30])
-
-loss_func = nn.CrossEntropyLoss()
-optimizer = optim.Adam(train_model.parameters(), lr=learn_rate)
+train_model = model.Model(2, [30, 30], learn_rate)
 
 file = open("variant1/model2.txt", "w")
 
@@ -121,24 +97,21 @@ for epoch in range(num_of_epoch):
     times = 0
     for inp, outp in train_data:
 
-        optimizer.zero_grad()
-
         inp_flat = []
 
         for i in inp:
             inp_flat += i
 
         start_time = time.time()
-        result = train_model.forward(torch.FloatTensor(inp_flat))
+        result = train_model.forward(inp_flat)
         times += time.time() - start_time
 
-        loss = loss_func(result, torch.FloatTensor(outp))
+        loss = model.find_loss(result, outp)
 
-        loss.backward()
-        optimizer.step()
+        train_model.backward(outp, loss)
 
         acc += data.what_figure(result) == data.what_figure(outp)
-        summ += loss.item()
+        summ += loss
         num += 1
 
     summ_test = 0
@@ -146,29 +119,21 @@ for epoch in range(num_of_epoch):
     time_test = 0
     acc_test = 0
 
-    with torch.no_grad():
-        train_model.eval()
-        for inp, outp in test_data:
+    for inp, outp in test_data:
+        inp_flat = []
 
-            optimizer.zero_grad()
+        for i in inp:
+            inp_flat += i
 
-            inp_flat = []
+        start_time = time.time()
+        result = train_model.forward(inp_flat)
+        time_test += time.time() - start_time
 
-            for i in inp:
-                inp_flat += i
+        loss = model.find_loss(result, outp)
 
-            start_time = time.time()
-            result = train_model.forward(torch.FloatTensor(inp_flat))
-            time_test += time.time() - start_time
-            #print(result, torch.LongTensor(outp))
-
-            loss = loss_func(result, torch.FloatTensor(outp))
-
-            acc_test += data.what_figure(result) == data.what_figure(outp)
-            summ_test += loss.item()
-            num_test += 1
-
-    train_model.train()
+        acc_test += data.what_figure(result) == data.what_figure(outp)
+        summ_test += loss
+        num_test += 1
 
     print(epoch, summ / num, times / num, acc / num, summ_test / num_test, time_test / num_test, acc_test / num)
     file.write(str(epoch))
@@ -187,12 +152,9 @@ for epoch in range(num_of_epoch):
     file.write("\n")
 
 file.close()
-torch.save(train_model.state_dict(), f"save2.mod")
+#torch.save(train_model.state_dict(), f"save2.mod")
 
-train_model = model.Model1(3, [30, 30, 30])
-
-loss_func = nn.CrossEntropyLoss()
-optimizer = optim.Adam(train_model.parameters(), lr=learn_rate)
+train_model = model.Model(3, [30, 30, 30], learn_rate)
 
 file = open("variant1/model3.txt", "w")
 
@@ -203,24 +165,21 @@ for epoch in range(num_of_epoch):
     times = 0
     for inp, outp in train_data:
 
-        optimizer.zero_grad()
-
         inp_flat = []
 
         for i in inp:
             inp_flat += i
 
         start_time = time.time()
-        result = train_model.forward(torch.FloatTensor(inp_flat))
+        result = train_model.forward(inp_flat)
         times += time.time() - start_time
 
-        loss = loss_func(result, torch.FloatTensor(outp))
+        loss = model.find_loss(result, outp)
 
-        loss.backward()
-        optimizer.step()
+        train_model.backward(outp, loss)
 
         acc += data.what_figure(result) == data.what_figure(outp)
-        summ += loss.item()
+        summ += loss
         num += 1
 
     summ_test = 0
@@ -228,29 +187,21 @@ for epoch in range(num_of_epoch):
     time_test = 0
     acc_test = 0
 
-    with torch.no_grad():
-        train_model.eval()
-        for inp, outp in test_data:
+    for inp, outp in test_data:
+        inp_flat = []
 
-            optimizer.zero_grad()
+        for i in inp:
+            inp_flat += i
 
-            inp_flat = []
+        start_time = time.time()
+        result = train_model.forward(inp_flat)
+        time_test += time.time() - start_time
 
-            for i in inp:
-                inp_flat += i
+        loss = model.find_loss(result, outp)
 
-            start_time = time.time()
-            result = train_model.forward(torch.FloatTensor(inp_flat))
-            time_test += time.time() - start_time
-            #print(result, torch.LongTensor(outp))
-
-            loss = loss_func(result, torch.FloatTensor(outp))
-
-            acc_test += data.what_figure(result) == data.what_figure(outp)
-            summ_test += loss.item()
-            num_test += 1
-
-    train_model.train()
+        acc_test += data.what_figure(result) == data.what_figure(outp)
+        summ_test += loss
+        num_test += 1
 
     print(epoch, summ / num, times / num, acc / num, summ_test / num_test, time_test / num_test, acc_test / num)
     file.write(str(epoch))
@@ -269,6 +220,6 @@ for epoch in range(num_of_epoch):
     file.write("\n")
 
 file.close()
-torch.save(train_model.state_dict(), f"save3.mod")
+#torch.save(train_model.state_dict(), f"save3.mod")
 
 
