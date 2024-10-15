@@ -80,5 +80,10 @@ class Model:
         for layer in reversed(self.layers):
             tmp = layer.backward(tmp)
 
+        for i in range(3):
+            t = expected[i]
+            y = self.last_result[i]
+            tmp[i] = y * (1 - y) * (t - y)
+
         for layer in self.layers:
             tmp = layer.step(tmp, alpha)
